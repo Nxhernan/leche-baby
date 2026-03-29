@@ -14,6 +14,14 @@
       },
       "oauth_client": [
         {
+          "client_id": "882911535341-oocn4tfhih8a2le5abg7prp0dc426r39.apps.googleusercontent.com",
+          "client_type": 1,
+          "android_info": {
+            "package_name": "com.lechebaby.app",
+            "certificate_hash": "ac18c665cd11909561de79c8c6a5477dbca96da9"
+          }
+        },
+        {
           "client_id": "882911535341-t37q3b1robsishroes4000ulp6ga8o3r.apps.googleusercontent.com",
           "client_type": 3
         }

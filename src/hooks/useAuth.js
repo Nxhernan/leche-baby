@@ -1,6 +1,8 @@
 import { useState, useEffect, useCallback } from 'react'
+import { Capacitor } from '@capacitor/core'
 import { auth, googleProvider } from '../firebase'
-import { signInWithRedirect, getRedirectResult, signOut, onAuthStateChanged } from 'firebase/auth'
+import { signInWithPopup, signInWithCredential, GoogleAuthProvider, signOut, onAuthStateChanged } from 'firebase/auth'
+import { FirebaseAuthentication } from '@capacitor-firebase/authentication'
 
 export function useAuth() {
   const [user, setUser] = useState(null)
@@ -11,20 +13,35 @@ export function useAuth() {
       setUser(u)
       setLoading(false)
     })
-
-    // Check redirect result on mount
-    getRedirectResult(auth).catch(() => {})
-
     return unsubscribe
   }, [])
 
-  const login = useCallback(() => {
-    signInWithRedirect(auth, googleProvider)
+  const login = useCallback(async () => {
+    try {
+      if (Capacitor.isNativePlatform()) {
+        // Native: use Capacitor Firebase Auth plugin
+        const result = await FirebaseAuthentication.signInWithGoogle()
+        const credential = GoogleAuthProvider.credential(result.credential?.idToken)
+        await signInWithCredential(auth, credential)
+      } else {
+        // Web: use popup
+        await signInWithPopup(auth, googleProvider)
+      }
+    } catch (e) {
+      console.error('Login failed:', e)
+    }
   }, [])
 
   const logout = useCallback(async () => {
-    await signOut(auth)
-    setUser(null)
+    try {
+      if (Capacitor.isNativePlatform()) {
+        await FirebaseAuthentication.signOut()
+      }
+      await signOut(auth)
+      setUser(null)
+    } catch (e) {
+      console.error('Logout failed:', e)
+    }
   }, [])
 
   return { user, loading, login, logout }
