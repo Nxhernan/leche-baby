@@ -1,0 +1,39 @@
+{
+  "project_info": {
+    "project_number": "882911535341",
+    "project_id": "leche-baby",
+    "storage_bucket": "leche-baby.firebasestorage.app"
+  },
+  "client": [
+    {
+      "client_info": {
+        "mobilesdk_app_id": "1:882911535341:android:ad585a7ab7161d9001ace4",
+        "android_client_info": {
+          "package_name": "com.lechebaby.app"
+        }
+      },
+      "oauth_client": [
+        {
+          "client_id": "882911535341-t37q3b1robsishroes4000ulp6ga8o3r.apps.googleusercontent.com",
+          "client_type": 3
+        }
+      ],
+      "api_key": [
+        {
+          "current_key": "AIzaSyA7Sbb2-DRULMuqR9-SvG6uZ4-uCT28XVg"
+        }
+      ],
+      "services": {
+        "appinvite_service": {
+          "other_platform_oauth_client": [
+            {
+              "client_id": "882911535341-t37q3b1robsishroes4000ulp6ga8o3r.apps.googleusercontent.com",
+              "client_type": 3
+            }
+          ]
+        }
+      }
+    }
+  ],
+  "configuration_version": "1"
+}

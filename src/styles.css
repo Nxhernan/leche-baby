@@ -814,3 +814,406 @@ body {
   font-size: 0.75rem;
   opacity: 0.6;
 }
+
+/* Header right */
+.header-right {
+  display: flex;
+  align-items: center;
+  gap: 4px;
+}
+
+.user-badge {
+  font-size: 0.8rem;
+  color: var(--success);
+  padding: 4px 8px;
+  background: rgba(78, 204, 163, 0.15);
+  border-radius: 12px;
+  white-space: nowrap;
+  max-width: 100px;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+/* Settings sections */
+.settings-section {
+  margin-bottom: 24px;
+}
+
+.settings-section-title {
+  font-size: 0.85rem;
+  color: var(--accent);
+  text-transform: uppercase;
+  letter-spacing: 1px;
+  margin-bottom: 12px;
+  padding-bottom: 6px;
+  border-bottom: 1px solid rgba(233, 69, 96, 0.3);
+}
+
+/* Google login button */
+.google-btn {
+  width: 100%;
+  padding: 14px;
+  border: none;
+  border-radius: 12px;
+  background: #4285f4;
+  color: white;
+  font-size: 1rem;
+  font-weight: 600;
+  cursor: pointer;
+  transition: background 0.2s;
+}
+
+.google-btn:active {
+  background: #3367d6;
+}
+
+/* Account info */
+.account-info {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+}
+
+.logout-btn {
+  background: none;
+  border: 1px solid var(--text-secondary);
+  color: var(--text-secondary);
+  padding: 6px 14px;
+  border-radius: 8px;
+  font-size: 0.85rem;
+  cursor: pointer;
+}
+
+.logout-btn:active {
+  background: rgba(255, 255, 255, 0.1);
+}
+
+/* Family setup */
+.family-setup {
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+  padding: 12px 0;
+}
+
+.family-btn {
+  width: 100%;
+  padding: 12px;
+  border: none;
+  border-radius: 12px;
+  font-size: 0.95rem;
+  font-weight: 600;
+  cursor: pointer;
+  transition: background 0.2s;
+}
+
+.family-btn.create {
+  background: var(--success);
+  color: var(--bg-primary);
+}
+
+.family-btn.create:active {
+  background: #3dba8f;
+}
+
+.family-btn.join {
+  background: var(--bg-card);
+  color: var(--text-primary);
+  min-width: 80px;
+}
+
+.family-btn.join:active {
+  background: var(--bg-secondary);
+}
+
+.family-divider {
+  text-align: center;
+  color: var(--text-secondary);
+  font-size: 0.85rem;
+}
+
+.family-join {
+  display: flex;
+  gap: 8px;
+}
+
+.join-input {
+  flex: 1;
+  padding: 12px;
+  border: 1px solid var(--bg-card);
+  border-radius: 12px;
+  background: var(--bg-secondary);
+  color: var(--text-primary);
+  font-size: 1.1rem;
+  text-align: center;
+  letter-spacing: 4px;
+  font-weight: 700;
+}
+
+.join-input::placeholder {
+  letter-spacing: normal;
+  font-weight: 400;
+  font-size: 0.85rem;
+}
+
+.join-error {
+  color: var(--accent);
+  font-size: 0.85rem;
+  text-align: center;
+}
+
+/* Family info */
+.family-info {
+  padding: 8px 0;
+}
+
+.share-btn {
+  background: var(--success);
+  color: var(--bg-primary);
+  border: none;
+  padding: 8px 16px;
+  border-radius: 8px;
+  font-size: 0.85rem;
+  font-weight: 600;
+  cursor: pointer;
+}
+
+.share-btn:active {
+  background: #3dba8f;
+}
+
+.created-code-msg {
+  background: rgba(78, 204, 163, 0.15);
+  color: var(--success);
+  padding: 10px;
+  border-radius: 8px;
+  text-align: center;
+  font-size: 0.9rem;
+  margin: 8px 0;
+}
+
+.leave-btn {
+  width: 100%;
+  margin-top: 12px;
+  padding: 10px;
+  background: none;
+  border: 1px solid var(--accent);
+  color: var(--accent);
+  border-radius: 8px;
+  font-size: 0.85rem;
+  cursor: pointer;
+}
+
+.leave-btn:active {
+  background: rgba(233, 69, 96, 0.15);
+}
+
+/* Stats enhancements */
+.stats-card-diff {
+  font-size: 0.65rem;
+  margin-top: 2px;
+  font-weight: 600;
+}
+
+.stats-card-diff.up {
+  color: var(--success);
+}
+
+.stats-card-diff.down {
+  color: var(--accent);
+}
+
+.stats-card-value small {
+  font-size: 0.8rem;
+  font-weight: 400;
+  color: var(--text-secondary);
+}
+
+.stats-type-pct {
+  color: var(--text-secondary);
+  font-size: 0.75rem;
+  margin-left: auto;
+}
+
+/* Interval details */
+.stats-intervals {
+  display: flex;
+  gap: 8px;
+  margin-bottom: 16px;
+}
+
+.stats-interval-item {
+  flex: 1;
+  background: var(--bg-secondary);
+  border-radius: 10px;
+  padding: 10px;
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+}
+
+.stats-interval-label {
+  font-size: 0.8rem;
+  color: var(--text-secondary);
+}
+
+.stats-interval-value {
+  font-weight: 700;
+  font-size: 0.9rem;
+}
+
+.stats-interval-value.short {
+  color: var(--success);
+}
+
+.stats-interval-value.long {
+  color: var(--warning);
+}
+
+/* Hour blocks */
+.stats-hour-blocks {
+  display: flex;
+  gap: 6px;
+  margin-bottom: 8px;
+}
+
+.stats-hour-block {
+  flex: 1;
+  background: var(--bg-secondary);
+  border-radius: 10px;
+  padding: 10px 6px;
+  text-align: center;
+  opacity: 0.5;
+  transition: opacity 0.2s;
+}
+
+.stats-hour-block.active {
+  opacity: 1;
+}
+
+.stats-hour-count {
+  font-size: 1.3rem;
+  font-weight: 700;
+  color: var(--success);
+}
+
+.stats-hour-label {
+  font-size: 0.7rem;
+  color: var(--text-primary);
+  margin-top: 2px;
+}
+
+.stats-hour-range {
+  font-size: 0.6rem;
+  color: var(--text-secondary);
+}
+
+.stats-peak-hour {
+  font-size: 0.8rem;
+  color: var(--text-secondary);
+  text-align: center;
+  margin-bottom: 8px;
+}
+
+.stats-peak-hour strong {
+  color: var(--warning);
+}
+
+/* Creator stats (family) */
+.stats-creators {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+}
+
+.stats-creator-row {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  font-size: 0.85rem;
+}
+
+.stats-creator-name {
+  min-width: 60px;
+  color: var(--text-primary);
+}
+
+.stats-creator-bar-bg {
+  flex: 1;
+  height: 8px;
+  background: var(--bg-secondary);
+  border-radius: 4px;
+  overflow: hidden;
+}
+
+.stats-creator-bar {
+  height: 100%;
+  background: var(--success);
+  border-radius: 4px;
+  transition: width 0.3s;
+}
+
+.stats-creator-count {
+  color: var(--text-secondary);
+  min-width: 20px;
+  text-align: right;
+}
+
+/* Chart header with range toggle */
+.stats-chart-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-top: 20px;
+  margin-bottom: 12px;
+}
+
+.stats-chart-header .stats-title {
+  margin-bottom: 0;
+}
+
+.stats-range-toggle {
+  display: flex;
+  gap: 4px;
+  background: var(--bg-secondary);
+  border-radius: 8px;
+  padding: 2px;
+}
+
+.range-btn {
+  border: none;
+  background: transparent;
+  color: var(--text-secondary);
+  font-size: 0.75rem;
+  padding: 4px 10px;
+  border-radius: 6px;
+  cursor: pointer;
+  font-weight: 600;
+}
+
+.range-btn.active {
+  background: var(--bg-card);
+  color: var(--text-primary);
+}
+
+/* Chart legend */
+.chart-legend {
+  display: flex;
+  justify-content: center;
+  gap: 16px;
+  margin-top: 10px;
+}
+
+.chart-legend-item {
+  display: flex;
+  align-items: center;
+  gap: 4px;
+  font-size: 0.7rem;
+  color: var(--text-secondary);
+}
+
+.chart-legend-dot {
+  width: 8px;
+  height: 8px;
+  border-radius: 50%;
+}

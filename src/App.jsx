@@ -1,10 +1,12 @@
-import { useState, useCallback, useEffect } from 'react'
+import { useState, useCallback, useEffect, useRef } from 'react'
 import BigButton from './components/BigButton'
 import Timer from './components/Timer'
 import History from './components/History'
 import Settings from './components/Settings'
 import Stats from './components/Stats'
 import Toast from './components/Toast'
+import { useAuth } from './hooks/useAuth'
+import { useFamily } from './hooks/useFamily'
 import { useFeedings } from './hooks/useFeedings'
 import { useSettings } from './hooks/useSettings'
 import { useShake } from './hooks/useShake'
@@ -13,7 +15,9 @@ import { useNotifications } from './hooks/useNotifications'
 const MILK_TYPES = ['Materna', 'Fórmula', 'Mixta']
 
 export default function App() {
-  const { feedings, addFeeding, removeFeeding, updateFeeding, getLastFeeding, getFeedingsForDate } = useFeedings()
+  const { user, loading: authLoading, login, logout } = useAuth()
+  const { family, familyId, loading: familyLoading, createFamily, joinFamily, leaveFamily } = useFamily(user)
+  const { feedings, addFeeding, removeFeeding, updateFeeding, getLastFeeding, getFeedingsForDate, migrateToFirestore } = useFeedings(user, familyId)
   const { settings, updateSetting } = useSettings()
   const { requestPermission, scheduleNotification, cancelNotification } = useNotifications(settings.notificationsEnabled)
 
@@ -23,8 +27,17 @@ export default function App() {
   const [manualAmount, setManualAmount] = useState(settings.defaultAmount)
   const [manualType, setManualType] = useState(settings.defaultType)
   const [activeTab, setActiveTab] = useState('home')
+  const migrated = useRef(false)
 
   const lastFeeding = getLastFeeding()
+
+  // Migrate local data to Firestore on first family join
+  useEffect(() => {
+    if (familyId && !migrated.current) {
+      migrated.current = true
+      migrateToFirestore()
+    }
+  }, [familyId, migrateToFirestore])
 
   // Auto-register when opened from widget with ?register=true
   useEffect(() => {
@@ -64,7 +77,7 @@ export default function App() {
 
     setToast({
       message: `✓ ${settings.defaultAmount}ml ${settings.defaultType}`,
-      feedingId: feeding.id,
+      feedingId: feeding?.id || Date.now(),
     })
   }, [addFeeding, settings.defaultAmount, settings.defaultType])
 
@@ -83,13 +96,26 @@ export default function App() {
 
   useShake(handleRegister, settings.shakeEnabled)
 
+  const handleCreateFamily = useCallback(async () => {
+    const code = await createFamily()
+    if (code) await migrateToFirestore()
+    return code
+  }, [createFamily, migrateToFirestore])
+
   return (
     <div className="app" onClick={handleFirstInteraction}>
       <header className="app-header">
         <h1>🍼 Leche Baby</h1>
-        <button className="settings-btn" onClick={() => setShowSettings(true)}>
-          ⚙
-        </button>
+        <div className="header-right">
+          {user && (
+            <span className="user-badge" title={user.email}>
+              {user.displayName?.split(' ')[0] || '👤'}
+            </span>
+          )}
+          <button className="settings-btn" onClick={() => setShowSettings(true)}>
+            ⚙
+          </button>
+        </div>
       </header>
 
       <div className="tab-bar">
@@ -171,7 +197,7 @@ export default function App() {
           <History getFeedingsForDate={getFeedingsForDate} onDelete={removeFeeding} onUpdate={updateFeeding} />
         </>
       ) : (
-        <Stats feedings={feedings} />
+        <Stats feedings={feedings} family={family} />
       )}
 
       {settings.shakeEnabled && (
@@ -191,6 +217,14 @@ export default function App() {
           settings={settings}
           onUpdate={updateSetting}
           onClose={() => setShowSettings(false)}
+          user={user}
+          family={family}
+          authLoading={authLoading || familyLoading}
+          onLogin={login}
+          onLogout={logout}
+          onCreateFamily={handleCreateFamily}
+          onJoinFamily={joinFamily}
+          onLeaveFamily={leaveFamily}
         />
       )}
     </div>
