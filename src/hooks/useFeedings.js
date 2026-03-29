@@ -7,7 +7,13 @@ const STORAGE_KEY = 'leche-baby-feedings'
 function loadFeedings() {
   try {
     const data = localStorage.getItem(STORAGE_KEY)
-    return data ? JSON.parse(data) : []
+    if (!data) return []
+    // Migrate old entries missing amount/type
+    return JSON.parse(data).map(f => ({
+      amount: 120,
+      type: 'Fórmula',
+      ...f,
+    }))
   } catch {
     return []
   }
@@ -43,8 +49,8 @@ export function useFeedings() {
     }
   }, [])
 
-  const addFeeding = useCallback((timestamp = Date.now()) => {
-    const newFeeding = { id: timestamp, timestamp }
+  const addFeeding = useCallback((timestamp = Date.now(), amount = 120, type = 'Fórmula') => {
+    const newFeeding = { id: timestamp, timestamp, amount, type }
     setFeedings(prev => {
       const updated = [newFeeding, ...prev]
       saveFeedings(updated)
@@ -78,9 +84,9 @@ export function useFeedings() {
       .sort((a, b) => b.timestamp - a.timestamp)
   }, [feedings])
 
-  const updateFeeding = useCallback((id, newTimestamp) => {
+  const updateFeeding = useCallback((id, updates) => {
     setFeedings(prev => {
-      const updated = prev.map(f => f.id === id ? { ...f, timestamp: newTimestamp } : f)
+      const updated = prev.map(f => f.id === id ? { ...f, ...updates } : f)
       updated.sort((a, b) => b.timestamp - a.timestamp)
       saveFeedings(updated)
       return updated

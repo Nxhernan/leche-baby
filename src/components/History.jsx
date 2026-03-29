@@ -1,5 +1,7 @@
 import { useState, useMemo } from 'react'
 
+const MILK_TYPES = ['Materna', 'Fórmula', 'Mixta']
+
 function formatTime(timestamp) {
   return new Date(timestamp).toLocaleTimeString('es', {
     hour: '2-digit',
@@ -36,6 +38,8 @@ function toTimeInputValue(timestamp) {
 export default function History({ getFeedingsForDate, onDelete, onUpdate }) {
   const [dateOffset, setDateOffset] = useState(0)
   const [editingId, setEditingId] = useState(null)
+  const [editAmount, setEditAmount] = useState(0)
+  const [editType, setEditType] = useState('')
 
   const currentDate = useMemo(() => {
     const d = new Date()
@@ -45,11 +49,17 @@ export default function History({ getFeedingsForDate, onDelete, onUpdate }) {
 
   const dayFeedings = getFeedingsForDate(currentDate)
 
-  const handleTimeChange = (feeding, newTimeStr) => {
+  const startEdit = (f) => {
+    setEditingId(f.id)
+    setEditAmount(f.amount || 120)
+    setEditType(f.type || 'Fórmula')
+  }
+
+  const handleSave = (feeding, newTimeStr) => {
     const [hours, minutes] = newTimeStr.split(':').map(Number)
     const d = new Date(feeding.timestamp)
     d.setHours(hours, minutes, 0, 0)
-    onUpdate(feeding.id, d.getTime())
+    onUpdate(feeding.id, { timestamp: d.getTime(), amount: editAmount, type: editType })
     setEditingId(null)
   }
 
@@ -80,35 +90,74 @@ export default function History({ getFeedingsForDate, onDelete, onUpdate }) {
         ) : (
           dayFeedings.map(f => (
             <div key={f.id} className="history-item">
-              <div>
-                {editingId === f.id ? (
+              {editingId === f.id ? (
+                <div className="history-edit-form">
                   <input
                     type="time"
                     className="history-time-input"
                     defaultValue={toTimeInputValue(f.timestamp)}
                     autoFocus
-                    onBlur={(e) => {
-                      if (e.target.value) handleTimeChange(f, e.target.value)
-                      else setEditingId(null)
-                    }}
                     onKeyDown={(e) => {
-                      if (e.key === 'Enter' && e.target.value) handleTimeChange(f, e.target.value)
+                      if (e.key === 'Enter') handleSave(f, e.target.value)
                       if (e.key === 'Escape') setEditingId(null)
                     }}
+                    ref={el => { if (el) el._timeInput = true }}
                   />
-                ) : (
-                  <div className="history-time" onClick={() => setEditingId(f.id)}>
-                    {formatTime(f.timestamp)} ✏️
+                  <div className="history-edit-row">
+                    <label>ml:</label>
+                    <input
+                      type="number"
+                      className="history-amount-input"
+                      value={editAmount}
+                      onChange={e => setEditAmount(Number(e.target.value))}
+                      min="10" max="500" step="10"
+                    />
                   </div>
-                )}
-                <div className="history-ago">{timeAgo(f.timestamp)}</div>
-              </div>
-              <button
-                className="history-delete"
-                onClick={() => onDelete(f.id)}
-              >
-                ✕
-              </button>
+                  <div className="history-edit-row">
+                    {MILK_TYPES.map(t => (
+                      <button
+                        key={t}
+                        className={`type-btn ${editType === t ? 'active' : ''}`}
+                        onClick={() => setEditType(t)}
+                      >
+                        {t}
+                      </button>
+                    ))}
+                  </div>
+                  <div className="history-edit-row">
+                    <button className="history-save-btn" onClick={() => {
+                      const timeInput = document.querySelector('.history-time-input')
+                      handleSave(f, timeInput?.value || toTimeInputValue(f.timestamp))
+                    }}>
+                      Guardar
+                    </button>
+                    <button className="history-cancel-btn" onClick={() => setEditingId(null)}>
+                      Cancelar
+                    </button>
+                  </div>
+                </div>
+              ) : (
+                <>
+                  <div onClick={() => startEdit(f)} style={{ cursor: 'pointer', flex: 1 }}>
+                    <div className="history-time">
+                      {formatTime(f.timestamp)} ✏️
+                    </div>
+                    <div className="history-meta">
+                      <span className="history-amount">{f.amount || 120}ml</span>
+                      <span className={`history-type type-${(f.type || 'Fórmula').toLowerCase()}`}>
+                        {f.type || 'Fórmula'}
+                      </span>
+                      <span className="history-ago">{timeAgo(f.timestamp)}</span>
+                    </div>
+                  </div>
+                  <button
+                    className="history-delete"
+                    onClick={() => onDelete(f.id)}
+                  >
+                    ✕
+                  </button>
+                </>
+              )}
             </div>
           ))
         )}

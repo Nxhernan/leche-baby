@@ -20,6 +20,7 @@ public class LecheBabyWidget extends AppWidgetProvider {
     private static final String ACTION_REGISTER = "com.lechebaby.app.ACTION_REGISTER";
     private static final String PREFS_NAME = "CapacitorStorage";
     private static final String FEEDINGS_KEY = "leche-baby-feedings";
+    private static final String SETTINGS_KEY = "leche-baby-settings";
 
     @Override
     public void onUpdate(Context context, AppWidgetManager appWidgetManager, int[] appWidgetIds) {
@@ -33,10 +34,8 @@ public class LecheBabyWidget extends AppWidgetProvider {
         super.onReceive(context, intent);
 
         if (ACTION_REGISTER.equals(intent.getAction())) {
-            // Register a new feeding directly from the widget
             registerFeeding(context);
 
-            // Update all widgets
             AppWidgetManager manager = AppWidgetManager.getInstance(context);
             int[] ids = manager.getAppWidgetIds(
                 new android.content.ComponentName(context, LecheBabyWidget.class)
@@ -47,9 +46,23 @@ public class LecheBabyWidget extends AppWidgetProvider {
         }
     }
 
+    private JSONObject readSettings(Context context) {
+        SharedPreferences prefs = context.getSharedPreferences(PREFS_NAME, Context.MODE_PRIVATE);
+        String data = prefs.getString(SETTINGS_KEY, "{}");
+        try {
+            return new JSONObject(data);
+        } catch (Exception e) {
+            return new JSONObject();
+        }
+    }
+
     private void registerFeeding(Context context) {
         SharedPreferences prefs = context.getSharedPreferences(PREFS_NAME, Context.MODE_PRIVATE);
         String data = prefs.getString(FEEDINGS_KEY, "[]");
+        JSONObject settings = readSettings(context);
+
+        int defaultAmount = settings.optInt("defaultAmount", 120);
+        String defaultType = settings.optString("defaultType", "Fórmula");
 
         try {
             JSONArray feedings = new JSONArray(data);
@@ -58,8 +71,9 @@ public class LecheBabyWidget extends AppWidgetProvider {
             JSONObject newFeeding = new JSONObject();
             newFeeding.put("id", now);
             newFeeding.put("timestamp", now);
+            newFeeding.put("amount", defaultAmount);
+            newFeeding.put("type", defaultType);
 
-            // Prepend to array
             JSONArray updated = new JSONArray();
             updated.put(newFeeding);
             for (int i = 0; i < feedings.length(); i++) {
@@ -68,13 +82,14 @@ public class LecheBabyWidget extends AppWidgetProvider {
 
             prefs.edit().putString(FEEDINGS_KEY, updated.toString()).apply();
         } catch (Exception e) {
-            // If data is corrupted, start fresh
             try {
                 long now = System.currentTimeMillis();
                 JSONArray fresh = new JSONArray();
                 JSONObject newFeeding = new JSONObject();
                 newFeeding.put("id", now);
                 newFeeding.put("timestamp", now);
+                newFeeding.put("amount", defaultAmount);
+                newFeeding.put("type", defaultType);
                 fresh.put(newFeeding);
                 prefs.edit().putString(FEEDINGS_KEY, fresh.toString()).apply();
             } catch (Exception ignored) {}
@@ -102,6 +117,15 @@ public class LecheBabyWidget extends AppWidgetProvider {
         );
         views.setOnClickPendingIntent(R.id.widget_root, openAppPending);
 
+        // Apply widget transparency from settings
+        JSONObject settings = readSettings(context);
+        float widgetAlpha = (float) settings.optDouble("widgetAlpha", 0.7);
+        views.setFloat(R.id.widget_root, "setAlpha", widgetAlpha);
+
+        // Read interval from settings for overdue threshold
+        double intervalHours = settings.optDouble("intervalHours", 4.0);
+        long overdueMs = (long)(intervalHours * 60 * 60 * 1000);
+
         // Read last feeding from SharedPreferences
         SharedPreferences prefs = context.getSharedPreferences(PREFS_NAME, Context.MODE_PRIVATE);
         String data = prefs.getString(FEEDINGS_KEY, "[]");
@@ -109,7 +133,6 @@ public class LecheBabyWidget extends AppWidgetProvider {
         try {
             JSONArray feedings = new JSONArray(data);
             if (feedings.length() > 0) {
-                // Find most recent feeding
                 long latestTimestamp = 0;
                 for (int i = 0; i < feedings.length(); i++) {
                     JSONObject f = feedings.getJSONObject(i);
@@ -117,12 +140,10 @@ public class LecheBabyWidget extends AppWidgetProvider {
                     if (ts > latestTimestamp) latestTimestamp = ts;
                 }
 
-                // Format time
                 SimpleDateFormat sdf = new SimpleDateFormat("hh:mm a", Locale.getDefault());
                 String timeStr = sdf.format(new Date(latestTimestamp));
                 views.setTextViewText(R.id.widget_last_time, "Última: " + timeStr);
 
-                // Elapsed time
                 long elapsed = System.currentTimeMillis() - latestTimestamp;
                 long minutes = elapsed / 60000;
                 long hours = minutes / 60;
@@ -136,11 +157,10 @@ public class LecheBabyWidget extends AppWidgetProvider {
                 }
                 views.setTextViewText(R.id.widget_elapsed, elapsedStr);
 
-                // Change color if overdue (> 4 hours)
-                if (elapsed > 4 * 60 * 60 * 1000) {
-                    views.setTextColor(R.id.widget_elapsed, 0xFFFFD369); // warning yellow
+                if (elapsed > overdueMs) {
+                    views.setTextColor(R.id.widget_elapsed, 0xFFFFD369);
                 } else {
-                    views.setTextColor(R.id.widget_elapsed, 0xFF4ECCA3); // success green
+                    views.setTextColor(R.id.widget_elapsed, 0xFF4ECCA3);
                 }
             } else {
                 views.setTextViewText(R.id.widget_last_time, "Sin registros");

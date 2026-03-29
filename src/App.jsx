@@ -3,20 +3,26 @@ import BigButton from './components/BigButton'
 import Timer from './components/Timer'
 import History from './components/History'
 import Settings from './components/Settings'
+import Stats from './components/Stats'
 import Toast from './components/Toast'
 import { useFeedings } from './hooks/useFeedings'
 import { useSettings } from './hooks/useSettings'
 import { useShake } from './hooks/useShake'
 import { useNotifications } from './hooks/useNotifications'
 
+const MILK_TYPES = ['Materna', 'Fórmula', 'Mixta']
+
 export default function App() {
-  const { addFeeding, removeFeeding, updateFeeding, getLastFeeding, getFeedingsForDate } = useFeedings()
+  const { feedings, addFeeding, removeFeeding, updateFeeding, getLastFeeding, getFeedingsForDate } = useFeedings()
   const { settings, updateSetting } = useSettings()
   const { requestPermission, scheduleNotification, cancelNotification } = useNotifications(settings.notificationsEnabled)
 
   const [showSettings, setShowSettings] = useState(false)
   const [toast, setToast] = useState(null)
   const [showManualEntry, setShowManualEntry] = useState(false)
+  const [manualAmount, setManualAmount] = useState(settings.defaultAmount)
+  const [manualType, setManualType] = useState(settings.defaultType)
+  const [activeTab, setActiveTab] = useState('home')
 
   const lastFeeding = getLastFeeding()
 
@@ -24,10 +30,9 @@ export default function App() {
   useEffect(() => {
     const params = new URLSearchParams(window.location.search)
     if (params.get('register') === 'true') {
-      addFeeding()
+      addFeeding(Date.now(), settings.defaultAmount, settings.defaultType)
       if (navigator.vibrate) navigator.vibrate(150)
       setToast({ message: '✓ Toma registrada (widget)', feedingId: Date.now() })
-      // Clean URL
       window.history.replaceState({}, '', window.location.pathname)
     }
   }, []) // eslint-disable-line react-hooks/exhaustive-deps
@@ -51,18 +56,17 @@ export default function App() {
   }, [lastFeeding, settings.intervalHours, settings.notificationsEnabled, scheduleNotification, cancelNotification])
 
   const handleRegister = useCallback(() => {
-    const feeding = addFeeding()
+    const feeding = addFeeding(Date.now(), settings.defaultAmount, settings.defaultType)
 
-    // Vibrate feedback
     if (navigator.vibrate) {
       navigator.vibrate(150)
     }
 
     setToast({
-      message: '✓ Toma registrada',
+      message: `✓ ${settings.defaultAmount}ml ${settings.defaultType}`,
       feedingId: feeding.id,
     })
-  }, [addFeeding])
+  }, [addFeeding, settings.defaultAmount, settings.defaultType])
 
   const handleUndo = useCallback(() => {
     if (toast?.feedingId) {
@@ -71,14 +75,12 @@ export default function App() {
     setToast(null)
   }, [toast, removeFeeding])
 
-  // Request notification permission on first interaction
   const handleFirstInteraction = useCallback(() => {
     if (settings.notificationsEnabled) {
       requestPermission()
     }
   }, [settings.notificationsEnabled, requestPermission])
 
-  // Shake detection
   useShake(handleRegister, settings.shakeEnabled)
 
   return (
@@ -90,47 +92,87 @@ export default function App() {
         </button>
       </header>
 
-      <BigButton onPress={handleRegister} />
-
-      {showManualEntry ? (
-        <div className="manual-entry">
-          <input
-            type="datetime-local"
-            className="manual-entry-input"
-            autoFocus
-            onChange={() => {}}
-          />
-          <div className="manual-entry-actions">
-            <button
-              className="manual-entry-confirm"
-              onClick={(e) => {
-                const input = e.target.parentElement.previousElementSibling
-                if (input.value) {
-                  const ts = new Date(input.value).getTime()
-                  addFeeding(ts)
-                  setToast({ message: '✓ Toma registrada (manual)', feedingId: ts })
-                  setShowManualEntry(false)
-                }
-              }}
-            >
-              Registrar
-            </button>
-            <button
-              className="manual-entry-cancel"
-              onClick={() => setShowManualEntry(false)}
-            >
-              Cancelar
-            </button>
-          </div>
-        </div>
-      ) : (
-        <button className="manual-entry-link" onClick={() => setShowManualEntry(true)}>
-          + Registrar hora pasada
+      <div className="tab-bar">
+        <button className={`tab-btn ${activeTab === 'home' ? 'active' : ''}`} onClick={() => setActiveTab('home')}>
+          Inicio
         </button>
-      )}
+        <button className={`tab-btn ${activeTab === 'stats' ? 'active' : ''}`} onClick={() => setActiveTab('stats')}>
+          Estadísticas
+        </button>
+      </div>
 
-      <Timer lastFeeding={lastFeeding} intervalHours={settings.intervalHours} />
-      <History getFeedingsForDate={getFeedingsForDate} onDelete={removeFeeding} onUpdate={updateFeeding} />
+      {activeTab === 'home' ? (
+        <>
+          <BigButton onPress={handleRegister} />
+
+          {showManualEntry ? (
+            <div className="manual-entry">
+              <input
+                type="datetime-local"
+                className="manual-entry-input"
+                autoFocus
+                onChange={() => {}}
+              />
+              <div className="manual-entry-row">
+                <label>ml:</label>
+                <input
+                  type="number"
+                  className="manual-amount-input"
+                  value={manualAmount}
+                  onChange={e => setManualAmount(Number(e.target.value))}
+                  min="10" max="500" step="10"
+                />
+              </div>
+              <div className="manual-entry-row">
+                {MILK_TYPES.map(t => (
+                  <button
+                    key={t}
+                    className={`type-btn ${manualType === t ? 'active' : ''}`}
+                    onClick={() => setManualType(t)}
+                  >
+                    {t}
+                  </button>
+                ))}
+              </div>
+              <div className="manual-entry-actions">
+                <button
+                  className="manual-entry-confirm"
+                  onClick={() => {
+                    const input = document.querySelector('.manual-entry-input')
+                    if (input?.value) {
+                      const ts = new Date(input.value).getTime()
+                      addFeeding(ts, manualAmount, manualType)
+                      setToast({ message: `✓ ${manualAmount}ml ${manualType} (manual)`, feedingId: ts })
+                      setShowManualEntry(false)
+                    }
+                  }}
+                >
+                  Registrar
+                </button>
+                <button
+                  className="manual-entry-cancel"
+                  onClick={() => setShowManualEntry(false)}
+                >
+                  Cancelar
+                </button>
+              </div>
+            </div>
+          ) : (
+            <button className="manual-entry-link" onClick={() => {
+              setManualAmount(settings.defaultAmount)
+              setManualType(settings.defaultType)
+              setShowManualEntry(true)
+            }}>
+              + Registrar hora pasada
+            </button>
+          )}
+
+          <Timer lastFeeding={lastFeeding} intervalHours={settings.intervalHours} />
+          <History getFeedingsForDate={getFeedingsForDate} onDelete={removeFeeding} onUpdate={updateFeeding} />
+        </>
+      ) : (
+        <Stats feedings={feedings} />
+      )}
 
       {settings.shakeEnabled && (
         <div className="shake-indicator">📳 Shake activo</div>

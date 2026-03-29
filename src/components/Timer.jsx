@@ -36,6 +36,9 @@ export default function Timer({ lastFeeding, intervalHours }) {
 
   return (
     <div className="timer-section">
+      <div className="timer-last-time">
+        Última: {new Date(lastFeeding.timestamp).toLocaleTimeString('es', { hour: '2-digit', minute: '2-digit', hour12: true })}
+      </div>
       <div className="timer-label">Desde la última toma</div>
       <div className="timer-value">{formatDuration(elapsed)}</div>
 
