@@ -1,0 +1,8 @@
+<?xml version='1.0' encoding='utf-8'?>
+<resources>
+    <string name="app_name">Leche Baby</string>
+    <string name="title_activity_main">Leche Baby</string>
+    <string name="package_name">com.lechebaby.app</string>
+    <string name="custom_url_scheme">com.lechebaby.app</string>
+    <string name="widget_description">Registra tomas de leche con un solo tap</string>
+</resources>

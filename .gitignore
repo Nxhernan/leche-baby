@@ -1,0 +1,11 @@
+node_modules/
+dist/
+.capacitor/
+android/app/build/
+android/.gradle/
+*.apk
+.DS_Store
+*.log
+
+.claude/
+android/local.properties
