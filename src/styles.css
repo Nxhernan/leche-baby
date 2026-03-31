@@ -1217,3 +1217,195 @@ body {
   height: 8px;
   border-radius: 50%;
 }
+
+/* Hour block emoji */
+.stats-hour-emoji {
+  font-size: 1.2rem;
+  margin-bottom: 2px;
+}
+
+.stats-hour-ml {
+  font-size: 0.6rem;
+  color: var(--text-secondary);
+  margin-top: 2px;
+}
+
+/* Heatmap */
+.stats-heatmap {
+  display: grid;
+  grid-template-columns: repeat(12, 1fr);
+  gap: 3px;
+  margin-bottom: 8px;
+}
+
+.stats-heatmap-cell {
+  aspect-ratio: 1;
+  border-radius: 4px;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  min-height: 28px;
+}
+
+.heatmap-hour {
+  font-size: 0.55rem;
+  color: var(--text-secondary);
+  opacity: 0.7;
+}
+
+.heatmap-count {
+  font-size: 0.6rem;
+  font-weight: 700;
+  color: var(--text-primary);
+}
+
+/* Timeline */
+.stats-timeline {
+  display: flex;
+  flex-direction: column;
+  gap: 0;
+  position: relative;
+  padding-left: 16px;
+}
+
+.stats-timeline::before {
+  content: '';
+  position: absolute;
+  left: 5px;
+  top: 8px;
+  bottom: 8px;
+  width: 2px;
+  background: var(--bg-card);
+}
+
+.stats-timeline-item {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  padding: 8px 0;
+  position: relative;
+}
+
+.timeline-dot {
+  width: 10px;
+  height: 10px;
+  border-radius: 50%;
+  flex-shrink: 0;
+  position: absolute;
+  left: -16px;
+  z-index: 1;
+}
+
+.timeline-content {
+  flex: 1;
+}
+
+.timeline-time {
+  font-size: 0.9rem;
+  font-weight: 600;
+  color: var(--text-primary);
+}
+
+.timeline-detail {
+  font-size: 0.75rem;
+  color: var(--text-secondary);
+}
+
+.timeline-creator {
+  color: var(--success);
+}
+
+.timeline-date {
+  font-size: 0.7rem;
+  color: var(--text-secondary);
+  white-space: nowrap;
+}
+
+/* Streak */
+.stats-streak {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 8px;
+  padding: 12px;
+  margin-top: 12px;
+  background: rgba(255, 211, 105, 0.1);
+  border: 1px solid rgba(255, 211, 105, 0.3);
+  border-radius: 12px;
+  font-size: 0.9rem;
+  color: var(--warning);
+}
+
+.streak-fire {
+  font-size: 1.3rem;
+}
+
+/* Best/worst day values */
+.stats-card-value.best {
+  color: var(--success);
+}
+
+.stats-card-value.worst {
+  color: var(--accent);
+}
+
+.stats-card-sub {
+  font-size: 0.65rem;
+  color: var(--text-secondary);
+  margin-top: 1px;
+}
+
+/* Pull-to-refresh indicator */
+.pull-indicator {
+  position: fixed;
+  top: 0;
+  left: 0;
+  right: 0;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 8px;
+  padding: 10px;
+  background: var(--bg-secondary);
+  color: var(--text-secondary);
+  font-size: 0.85rem;
+  z-index: 100;
+  animation: slideDown 0.3s ease;
+}
+
+@keyframes slideDown {
+  from { transform: translateY(-100%); }
+  to { transform: translateY(0); }
+}
+
+.pull-spinner {
+  width: 18px;
+  height: 18px;
+  border: 2px solid var(--text-secondary);
+  border-top-color: var(--success);
+  border-radius: 50%;
+  animation: spin 0.8s linear infinite;
+}
+
+@keyframes spin {
+  to { transform: rotate(360deg); }
+}
+
+/* History creator badge */
+.history-creator {
+  font-size: 0.7rem;
+  color: var(--success);
+  background: rgba(78, 204, 163, 0.15);
+  padding: 1px 6px;
+  border-radius: 6px;
+}
+
+/* App logo */
+.app-logo {
+  width: 28px;
+  height: 28px;
+  border-radius: 6px;
+  vertical-align: middle;
+  margin-right: 6px;
+}

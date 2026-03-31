@@ -17,7 +17,7 @@ const MILK_TYPES = ['Materna', 'Fórmula', 'Mixta']
 export default function App() {
   const { user, loading: authLoading, login, logout } = useAuth()
   const { family, familyId, loading: familyLoading, createFamily, joinFamily, leaveFamily } = useFamily(user)
-  const { feedings, addFeeding, removeFeeding, updateFeeding, getLastFeeding, getFeedingsForDate, migrateToFirestore } = useFeedings(user, familyId)
+  const { feedings, addFeeding, removeFeeding, updateFeeding, getLastFeeding, getFeedingsForDate, migrateToFirestore, refresh } = useFeedings(user, familyId)
   const { settings, updateSetting } = useSettings()
   const { requestPermission, scheduleNotification, cancelNotification } = useNotifications(settings.notificationsEnabled)
 
@@ -27,17 +27,34 @@ export default function App() {
   const [manualAmount, setManualAmount] = useState(settings.defaultAmount)
   const [manualType, setManualType] = useState(settings.defaultType)
   const [activeTab, setActiveTab] = useState('home')
-  const migrated = useRef(false)
-
+  const [refreshing, setRefreshing] = useState(false)
   const lastFeeding = getLastFeeding()
 
-  // Migrate local data to Firestore on first family join
-  useEffect(() => {
-    if (familyId && !migrated.current) {
-      migrated.current = true
-      migrateToFirestore()
+  // Pull-to-refresh
+  const touchStartY = useRef(0)
+  const pullDistance = useRef(0)
+  const appRef = useRef(null)
+
+  const handleTouchStart = useCallback((e) => {
+    if (window.scrollY === 0) {
+      touchStartY.current = e.touches[0].clientY
     }
-  }, [familyId, migrateToFirestore])
+  }, [])
+
+  const handleTouchMove = useCallback((e) => {
+    if (window.scrollY > 0 || refreshing) return
+    pullDistance.current = e.touches[0].clientY - touchStartY.current
+  }, [refreshing])
+
+  const handleTouchEnd = useCallback(async () => {
+    if (pullDistance.current > 80 && !refreshing) {
+      setRefreshing(true)
+      if (navigator.vibrate) navigator.vibrate(50)
+      await refresh()
+      setRefreshing(false)
+    }
+    pullDistance.current = 0
+  }, [refresh, refreshing])
 
   // Auto-register when opened from widget with ?register=true
   useEffect(() => {
@@ -103,9 +120,26 @@ export default function App() {
   }, [createFamily, migrateToFirestore])
 
   return (
-    <div className="app" onClick={handleFirstInteraction}>
+    <div
+      className="app"
+      ref={appRef}
+      onClick={handleFirstInteraction}
+      onTouchStart={handleTouchStart}
+      onTouchMove={handleTouchMove}
+      onTouchEnd={handleTouchEnd}
+    >
+      {refreshing && (
+        <div className="pull-indicator">
+          <div className="pull-spinner" />
+          Sincronizando...
+        </div>
+      )}
+
       <header className="app-header">
-        <h1>🍼 Leche Baby</h1>
+        <h1>
+          <img src="/logo.svg" alt="" className="app-logo" />
+          Leche Baby
+        </h1>
         <div className="header-right">
           {user && (
             <span className="user-badge" title={user.email}>
@@ -194,7 +228,7 @@ export default function App() {
           )}
 
           <Timer lastFeeding={lastFeeding} intervalHours={settings.intervalHours} />
-          <History getFeedingsForDate={getFeedingsForDate} onDelete={removeFeeding} onUpdate={updateFeeding} />
+          <History getFeedingsForDate={getFeedingsForDate} onDelete={removeFeeding} onUpdate={updateFeeding} family={family} />
         </>
       ) : (
         <Stats feedings={feedings} family={family} />

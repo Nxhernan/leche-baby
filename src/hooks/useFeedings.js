@@ -24,8 +24,25 @@ function loadLocal() {
 
 function saveLocal(feedings) {
   localStorage.setItem(STORAGE_KEY, JSON.stringify(feedings))
+  syncToNative(feedings)
+}
+
+function syncToNative(feedings) {
   if (Capacitor.isNativePlatform()) {
     Preferences.set({ key: STORAGE_KEY, value: JSON.stringify(feedings) })
+  }
+}
+
+// Force widget refresh on Android
+function refreshWidget() {
+  if (Capacitor.isNativePlatform()) {
+    try {
+      // Send broadcast to update widget via Capacitor bridge
+      const { Capacitor: Cap } = window
+      if (Cap?.Plugins?.LecheBabyWidget) {
+        Cap.Plugins.LecheBabyWidget.refresh()
+      }
+    } catch { /* widget refresh is best-effort */ }
   }
 }
 
@@ -57,10 +74,8 @@ export function useFeedings(user, familyId) {
         ...d.data(),
       }))
       setFeedings(docs)
-      // Sync to SharedPreferences for widget
-      if (Capacitor.isNativePlatform()) {
-        Preferences.set({ key: STORAGE_KEY, value: JSON.stringify(docs) })
-      }
+      // Sync to SharedPreferences for widget on every Firestore update
+      syncToNative(docs)
     })
 
     return () => {
@@ -93,7 +108,10 @@ export function useFeedings(user, familyId) {
 
     if (isFirestore) {
       const ref = await addDoc(collection(db, 'families', familyId, 'feedings'), feedingData)
-      return { id: ref.id, ...feedingData }
+      // onSnapshot will update the state automatically, just sync to widget
+      const newFeeding = { id: ref.id, ...feedingData }
+      syncToNative([newFeeding, ...feedings].sort((a, b) => b.timestamp - a.timestamp))
+      return newFeeding
     }
 
     const newFeeding = { id: timestamp, ...feedingData }
@@ -167,9 +185,36 @@ export function useFeedings(user, familyId) {
       })
     }
     await batch.commit()
-    // Clear local after migration
     localStorage.removeItem(STORAGE_KEY)
   }, [user, familyId, isFirestore])
 
-  return { feedings, addFeeding, removeFeeding, updateFeeding, getLastFeeding, getFeedingsForDate, migrateToFirestore }
+  // Pull-to-refresh: force re-subscribe to Firestore or re-read local
+  const refresh = useCallback(async () => {
+    if (isFirestore) {
+      // Unsub and resub to force fresh data
+      if (unsubRef.current) {
+        unsubRef.current()
+        unsubRef.current = null
+      }
+      const feedingsRef = collection(db, 'families', familyId, 'feedings')
+      const q = query(feedingsRef, orderBy('timestamp', 'desc'))
+      return new Promise((resolve) => {
+        unsubRef.current = onSnapshot(q, (snapshot) => {
+          const docs = snapshot.docs.map(d => ({
+            id: d.id,
+            amount: 120,
+            type: 'Fórmula',
+            ...d.data(),
+          }))
+          setFeedings(docs)
+          syncToNative(docs)
+          resolve()
+        })
+      })
+    } else {
+      setFeedings(loadLocal())
+    }
+  }, [isFirestore, familyId])
+
+  return { feedings, addFeeding, removeFeeding, updateFeeding, getLastFeeding, getFeedingsForDate, migrateToFirestore, refresh }
 }

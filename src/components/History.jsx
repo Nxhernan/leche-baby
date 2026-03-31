@@ -35,7 +35,7 @@ function toTimeInputValue(timestamp) {
   return `${String(d.getHours()).padStart(2, '0')}:${String(d.getMinutes()).padStart(2, '0')}`
 }
 
-export default function History({ getFeedingsForDate, onDelete, onUpdate }) {
+export default function History({ getFeedingsForDate, onDelete, onUpdate, family }) {
   const [dateOffset, setDateOffset] = useState(0)
   const [editingId, setEditingId] = useState(null)
   const [editAmount, setEditAmount] = useState(0)
@@ -147,6 +147,11 @@ export default function History({ getFeedingsForDate, onDelete, onUpdate }) {
                       <span className={`history-type type-${(f.type || 'Fórmula').toLowerCase()}`}>
                         {f.type || 'Fórmula'}
                       </span>
+                      {family?.members?.length > 1 && f.createdBy && family.memberNames?.[f.createdBy] && (
+                        <span className="history-creator">
+                          {family.memberNames[f.createdBy]}
+                        </span>
+                      )}
                       <span className="history-ago">{timeAgo(f.timestamp)}</span>
                     </div>
                   </div>
